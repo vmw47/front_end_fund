@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Are You Hip? - Song Guessing Game</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
-
     <style>
         body {
             display: flex;
@@ -20,35 +19,18 @@
             position: relative;
         }
 
-        .title-container {
-            position: absolute;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-        }
-
-        .title-container h1 {
-            font-size: 32px;
-            margin: 0;
-        }
-
-        .title-container h2 {
-            font-size: 24px;
-            margin: 5px 0;
-        }
-
-        .question-container {
+        .start-container, .question-container {
             background: white;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             max-width: 800px;
             width: 100%;
-            position: absolute;
-            top: 25%;
-            left: 50%;
-            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .question-container {
+            display: none;
         }
 
         button {
@@ -68,131 +50,113 @@
             padding: 15px 20px;
         }
 
-        button.clicked.correct{
+        button.clicked.correct {
             background: green;
         }
 
-        button.clicked{
+        button.clicked {
             background: red;
         }
+        @keyframes floatAnimation {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0); }
+    }
 
-        audio {
-            margin-top: 15px;
-        }
-        #score-container {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 20px;
-            color: #333;
-        }
+    .music-icon {
+        font-size: 50px;
+        color: #ff4081;
+        animation: floatAnimation 2s infinite ease-in-out;
+        margin-bottom: 10px;
+    }
     </style>
 </head>
 <body>
-
-    <div class="title-container">
+    <div id="start-container" class="start-container">
+        <div class="music-icon">🎵</div>
         <h1>Are You Hip?</h1>
-        <p>Guess the Song 🎵</p>
-        <p>Score: <span id="score">0</span></p>
+        <p>Prove your aux skills!</p>
+        <button onclick="startGame()">Start Game</button>
     </div>
 
     <div id="question-container" class="question-container">
+        <h2>Guess the Song 🎵</h2>
+        <p>Score: <span id="score">0</span></p>
         <p id="question-text">What song is this?</p>
         <video id="video-player" width="560" height="315" controls>
             <source id="video-source" type="video/mp4">
             Your browser does not support the video tag.
-          </video>
+        </video>
         <div id="answers"></div>
     </div>
 
-    
-
     <script>
-
         const questions = [
-            { 
-                video: "videos/pon_de_replay.mp4", 
-                options: ["Only Girl", "Pon De Replay", "Rude Boy"], 
-                answer: "Pon De Replay" 
-            },
-            { 
-                video: "videos/my_boo.mp4", 
-                options: ["My Boo", "Billie Jean", "Yeah!"], 
-                answer: "My Boo" 
-            },
-            { 
-                video: "videos/beyonce.mp4", 
-                options: ["Irreplaceable", "1+1", "Halo"], 
-                answer: "1+1" 
-            }
+            { video: "videos/pon_de_replay.mp4", options: ["Only Girl", "Pon De Replay", "Rude Boy"], answer: "Pon De Replay" },
+            { video: "videos/my_boo.mp4", options: ["My Boo", "Billie Jean", "Yeah!"], answer: "My Boo" },
+            { video: "videos/beyonce.mp4", options: ["Irreplaceable", "1+1", "Halo"], answer: "1+1" }
         ];
         
         let currentQuestionIndex = 0;
-        const questionContainer = document.getElementById("question-container");
-        const answersContainer = document.getElementById("answers");
-
         let score = 0;
 
-        function updateScore(){
+        function startGame() {
+            document.getElementById("start-container").style.display = "none";
+            document.getElementById("question-container").style.display = "block";
+            loadQuestion();
+        }
+
+        function updateScore() {
             document.getElementById("score").textContent = score;
         }
+
         function celebrate() {
-             confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         }
 
         function loadQuestion() {
-        if (currentQuestionIndex < questions.length) {
-            const question = questions[currentQuestionIndex];
-            const videoPlayer = document.getElementById("video-player");
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                const videoPlayer = document.getElementById("video-player");
+                const answersContainer = document.getElementById("answers");
 
-            videoPlayer.src = question.video;
-            videoPlayer.load();
+                videoPlayer.src = question.video;
+                videoPlayer.load();
+                answersContainer.innerHTML = "";
 
-            answersContainer.innerHTML = ""; 
-
-            question.options.forEach(option => {
-                const button = document.createElement("button");
-                button.textContent = option;
-                button.onclick = () => {
-                    if (button.textContent === question.answer) {
-                        button.classList.add("clicked", "correct");
-                        score++;
-                        updateScore();
-                        celebrate();
-                    } else {
-                        button.classList.add("clicked");
-                    }
-
-                    const allButtons = answersContainer.querySelectorAll("button");
-                    allButtons.forEach(btn => btn.disabled = true);
-
-                    setTimeout(() => {
-                        currentQuestionIndex++;
-                        if (currentQuestionIndex < questions.length) {
-                            loadQuestion();
+                question.options.forEach(option => {
+                    const button = document.createElement("button");
+                    button.textContent = option;
+                    button.onclick = () => {
+                        if (button.textContent === question.answer) {
+                            button.classList.add("clicked", "correct");
+                            score++;
+                            updateScore();
+                            celebrate();
                         } else {
-                            endGame();
+                            button.classList.add("clicked");
                         }
-                    }, 1500);
-                };
-                answersContainer.appendChild(button);
-            });
-        }
-    }
 
-    function endGame() {
-        if (score === 3) {
-            questionContainer.innerHTML = "<h2>🎉 Oh! You are Hip! 🎉</h2>";
-        } else {
-            questionContainer.innerHTML = "<h2> Your aux privileges have been revoked :( </h2>";
-        }
-    }
+                        document.querySelectorAll("#answers button").forEach(btn => btn.disabled = true);
 
-    loadQuestion();
+                        setTimeout(() => {
+                            currentQuestionIndex++;
+                            if (currentQuestionIndex < questions.length) {
+                                loadQuestion();
+                            } else {
+                                endGame();
+                            }
+                        }, 1500);
+                    };
+                    answersContainer.appendChild(button);
+                });
+            }
+        }
+
+        function endGame() {
+            const container = document.getElementById("question-container");
+            container.innerHTML = score === questions.length ? "<h2>🎉 Oh! You are Hip! 🎉</h2>" : "<h2>Your aux privileges have been revoked :(</h2>";
+        }
     </script>
-
 </body>
 </html>
